@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ad Review Demo</title>
+<meta name="description" content="Concept demo: review step of an AI agent that builds on-brand static ads from Google Drive photos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F6F3;--panel:#FFFFFF;--line:#E3E3DE;--line2:#ECECE7;--ink:#16181D;--ink2:#3A3D45;--muted:#5A5D66;--chip:#F0F0EC;
+  --blue:#2F5BEA;--blueSoft:#F2F5FF;--green:#1E6B3A;--greenSoft:#E3F4EA;--amber:#7A4B00;--amberSoft:#FFF4DB;--red:#9B1C1C;--redSoft:#FDE7E7;--navy:#2442A8;--navySoft:#E5ECFF;
+  --forest:#1F3A2E;--sand:#EFE9DF;--gold:#C8A96A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+button{font-family:inherit}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.serif{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line)}
+.crumbs{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.logo span.box{width:28px;height:28px;border-radius:7px;background:var(--ink);display:flex;align-items:center;justify-content:center}
+.badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:12px;padding:6px 10px;border-radius:999px}
+.badge.demo{font-weight:600;color:var(--amber);background:var(--amberSoft)}
+.badge.sim{color:var(--ink2);background:var(--chip);border:1px dashed #8A8D94}
+.primary{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+.primary:disabled{background:#8A8D94;cursor:not-allowed}
+.toast{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 24px 0;padding:12px 16px;background:var(--navySoft);color:var(--navy);border-radius:10px;font-size:14px;font-weight:500}
+.toast button{border:none;background:transparent;color:var(--navy);font-size:20px;width:32px;height:32px;cursor:pointer}
+.layout{display:flex;flex-wrap:wrap;gap:24px;padding:24px;align-items:flex-start;max-width:1500px;margin:0 auto}
+aside{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:16px}
+main{flex:999 1 640px;min-width:0;display:flex;flex-direction:column;gap:20px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+nav.panel{display:flex;flex-direction:column;gap:2px;padding:8px}
+nav button{text-align:left;border:none;background:transparent;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--ink2);cursor:pointer}
+nav button[aria-current]{background:var(--chip);color:var(--ink);font-weight:600}
+.brief{padding:16px;display:flex;flex-direction:column;gap:14px}
+.brief h2{margin:0;font-size:14px}
+.label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.brief p,.brief ul{margin:4px 0 0;font-size:13px}
+.brief ul{padding-left:18px;display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips span{font-size:12px;padding:4px 8px;background:var(--chip);border-radius:6px}
+.small{font-size:12px;color:var(--muted)}
+.steps{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px}
+.step{flex:1 1 120px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:#FAFAF8}
+.step.active{background:var(--blueSoft)}
+.dot{width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;background:#8A8D94}
+.dot.done{background:var(--green)}.dot.active{background:var(--blue)}
+.step b{display:block;font-size:12px}.step small{font-size:11px;color:var(--muted)}
+.work{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.gridwrap{flex:999 1 420px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{height:36px;padding:0 12px;border-radius:999px;border:1px solid #DCDCD6;background:#fff;color:var(--ink2);font-size:13px;font-weight:500;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.card{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:10px;background:#fff;border-radius:14px;border:1.5px solid var(--line);box-sizing:border-box}
+.card.sel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,91,234,.18)}
+.card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.fname{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.s-pending{color:var(--amber);background:var(--amberSoft)}.s-approved{color:var(--green);background:var(--greenSoft)}.s-rejected{color:var(--red);background:var(--redSoft)}.s-exported{color:var(--navy);background:var(--navySoft)}
+.ad{position:relative;width:100%;border-radius:8px;overflow:hidden}
+.ad .photo{position:absolute;left:0;right:0;display:flex;justify-content:center}
+.ad .photo svg{width:auto}
+.ad .brand{position:absolute;left:8%;font-weight:700;letter-spacing:.32em;color:var(--forest)}
+.ad .copy{position:absolute;background:var(--forest);display:flex;flex-direction:column}
+.ad .copy .h{color:#fff;line-height:1.05}
+.ad .cta{align-self:flex-start;font-weight:600;color:var(--forest);background:var(--sand);border-radius:999px}
+.lock{position:absolute;top:6px;right:6px;display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#fff;background:rgba(22,24,29,.78);padding:3px 6px;border-radius:999px}
+.empty{padding:32px;text-align:center;color:var(--muted);font-size:14px;background:#fff;border:1px dashed #DCDCD6;border-radius:14px}
+.detail{flex:1 1 380px;min-width:0;padding:18px;display:flex;flex-direction:column;gap:16px}
+.detail h2{margin:0;font-size:16px}
+.detail h3{margin:0;font-size:13px}
+.seg{display:inline-flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg button{height:34px;padding:0 14px;border:none;border-radius:8px;background:transparent;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:#fff}
+.stage{display:flex;justify-content:center;background:var(--bg);border-radius:12px;padding:18px}
+.stage .ad{border-radius:6px;box-shadow:0 8px 24px rgba(22,24,29,.12)}
+.band{position:absolute;left:0;right:0;background:rgba(214,69,69,.16);display:flex;justify-content:flex-end;padding:4px 6px;font-size:10px;font-weight:600;color:#8E1F1F}
+.band.top{top:0;height:14%;align-items:flex-end;border-bottom:1.5px dashed #B33A3A}
+.band.bottom{bottom:0;height:35%;align-items:flex-start;border-top:1.5px dashed #B33A3A}
+.integrity{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--green);background:var(--greenSoft);padding:8px 10px;border-radius:8px}
+.variants{display:flex;flex-direction:column;gap:8px}
+.variant{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.variant[aria-pressed="true"]{border-color:var(--blue);background:var(--blueSoft)}
+.variant small{font-size:11px;color:var(--muted);white-space:nowrap}
+.qa{display:flex;flex-direction:column;gap:6px}
+.qa div{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.note{font-size:12px;color:var(--red);background:var(--redSoft);padding:8px 10px;border-radius:8px}
+.actions{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line2);padding-top:14px}
+.actions label{font-size:12px;font-weight:600}
+textarea{min-height:64px;resize:vertical;padding:10px;border:1px solid #DCDCD6;border-radius:8px;font:13px Inter,sans-serif;color:var(--ink)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.approve{flex:1 1 140px;height:44px;border:none;border-radius:10px;background:var(--green);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+.reject{flex:1 1 140px;height:44px;border:1.5px solid var(--red);border-radius:10px;background:#fff;color:var(--red);font-weight:600;font-size:14px;cursor:pointer}
+.ghost{height:36px;padding:0 12px;border:1px solid #DCDCD6;border-radius:8px;background:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.log{padding:16px;display:flex;flex-direction:column;gap:12px}
+.log h2{margin:0;font-size:14px}
+.tablebox{overflow-x:auto}
+table{width:100%;min-width:640px;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line2)}
+td{padding:8px;border-bottom:1px solid #F2F2EE}
+.templates{padding:20px;display:flex;flex-direction:column;gap:16px}
+.templates h2{margin:0;font-size:16px}
+.tpls{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.tpls figure{margin:0;display:flex;flex-direction:column;gap:10px;flex:0 1 240px}
+.tpls figcaption{font-size:13px}
+.slot{position:absolute;border:1.5px dashed var(--blue);border-radius:4px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--navy);font-size:11px;font-weight:600;padding:0 8px}
+footer{max-width:1500px;margin:0 auto;padding:8px 24px 32px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<footer>Concept demo with sample data. Product images are drawn stand-ins; the real system places original photos (crop and scale only). Built by Anoop · <a href="https://github.com/devbyanoop">github.com/devbyanoop</a></footer>
+<script>
+(function(){
+  var ICON = {
+    lock: function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';},
+    check:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1E6B3A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Passed"><path d="M5 12l5 5 9-10"/></svg>',
+    warn:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9A5A00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Warning"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>',
+    down:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>',
+    app:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg>'
+  };
+  function bottle(tint,h){
+    return '<svg viewBox="0 0 80 150" style="height:'+h+'" aria-hidden="true"><ellipse cx="40" cy="146" rx="30" ry="3" fill="#000" opacity=".12"/><rect x="28" y="4" width="24" height="22" rx="4" fill="#2A2A2A"/><rect x="31" y="24" width="18" height="10" fill="#444"/><rect x="12" y="32" width="56" height="112" rx="14" fill="'+tint+'"/><rect x="20" y="70" width="40" height="40" rx="3" fill="#F7F3EC" opacity=".92"/><rect x="27" y="82" width="26" height="3" fill="#1F3A2E"/><rect x="30" y="90" width="20" height="2" fill="#8A8A8A"/></svg>';
+  }
+  function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  function qa(extra){
+    return [
+      {label:'Copy follows brief rules (length, banned words, CTA)',ok:true},
+      {label:'Text contrast ≥ 4.5:1',ok:true},
+      {label:'Logo present, above minimum size',ok:true},
+      extra || {label:'No text overflow in any format',ok:true}
+    ];
+  }
+  var ADS = [
+    {id:'a1',file:'serum_hero_01.jpg',template:'Full-bleed',tint:'#B5703A',bg:'#E9E1D4',hash:'9f2c…a71e',sub:'Vitamin C serum · 20% off this week',cta:'Shop now',variants:['Glow that lasts all winter','Your winter skin, restored','Winter glow, now 20% off'],qa:qa()},
+    {id:'a2',file:'cream_jar_02.jpg',template:'Split',tint:'#E9E4D9',bg:'#D9E2DA',hash:'41be…0c93',sub:'Barrier cream · 20% off',cta:'Shop the cream',variants:['Deep moisture, cold-proof','Rich cream for dry days','Hydration, sealed in'],qa:qa({label:'1:1 headline wraps to 2 lines — font stepped down 8%',ok:false})},
+    {id:'a3',file:'cleanser_flatlay_03.jpg',template:'Full-bleed',tint:'#6E8B74',bg:'#EFE9DF',hash:'c07d…5e22',sub:'Gentle cleanser · 20% off',cta:'Shop now',variants:['Start clean, end calm','A softer start to the day','Clean skin, calm mind'],qa:qa()},
+    {id:'a4',file:'set_giftbox_04.jpg',template:'Split',tint:'#2E4A3C',bg:'#E4DCCF',hash:'7a19…d4f0',sub:'The winter ritual set · 20% off',cta:'Shop the set',variants:['The winter ritual, boxed','A gift for good skin','Three steps to winter glow'],qa:qa()},
+    {id:'a5',file:'serum_hand_05.jpg',template:'Full-bleed',tint:'#A9673A',bg:'#E6DED2',hash:'e5a8…19bc',sub:'Vitamin C serum · 20% off',cta:'Shop now',variants:['Bright skin, short days','Light in a bottle','Winter needs a little glow'],qa:qa()},
+    {id:'a6',file:'toner_shelf_06.jpg',template:'Split',tint:'#9FB3C8',bg:'#E8ECEF',hash:'3d6f…b8a2',sub:'Hydrating toner · 20% off',cta:'Shop toner',variants:['Balance, after the cold','Your quiet daily reset','Soft skin, every season'],qa:qa({label:'Crop confidence low — product edge near frame',ok:false})}
+  ];
+  var LABEL = {pending:'Pending review',approved:'Approved',rejected:'Changes requested',exported:'Exported'};
+  var SIZES = {
+    '4:5':{ratio:'4 / 5',w:'340px',label:'1080 × 1350'},
+    '9:16':{ratio:'9 / 16',w:'270px',label:'1080 × 1920'},
+    '1:1':{ratio:'1 / 1',w:'360px',label:'1080 × 1080'}
+  };
+  var S = {
+    filter:'all',selectedId:'a1',size:'4:5',showSafe:true,
+    statuses:{a1:'pending',a2:'pending',a3:'approved',a4:'pending',a5:'pending',a6:'rejected'},
+    variant:{},comments:{a6:'Crop cuts the bottle cap — use photo 06b instead'},
+    comment:'',log:[],toast:''
+  };
+  function byId(id){for(var i=0;i<ADS.length;i++){if(ADS[i].id===id)return ADS[i];}return ADS[0];}
+  function headline(a){return a.variants[S.variant[a.id]||0];}
+  function count(k){return ADS.filter(function(a){return S.statuses[a.id]===k;}).length;}
+
+  function adMarkup(a,big,size){
+    var story = big && size==='9:16';
+    var fs = big?30:18, sfs = big?13:9, cfs = big?12:9, cpad = big?'6px 14px':'3px 8px', bfs = big?13:10;
+    var h = esc(headline(a));
+    var inner;
+    if(a.template==='Split'){
+      var sh = story?'48%':'60%';
+      inner = '<div class="photo" style="top:0;height:'+sh+';align-items:flex-end;padding-bottom:4%">'+bottle(a.tint,big?'70%':'78%')+'</div>'+
+        '<div class="copy" style="left:0;right:0;top:'+sh+';bottom:0;padding:'+(big?'18px 20px':'10px 12px')+';justify-content:'+(story?'flex-start':'center')+';gap:'+(big?6:4)+'px">'+
+        '<div class="h serif" style="font-size:'+fs+'px">'+h+'</div><div style="font-size:'+sfs+'px;color:var(--gold)">'+esc(a.sub)+'</div>'+
+        '<span class="cta" style="font-size:'+cfs+'px;padding:'+cpad+';margin-top:'+(big?6:3)+'px">'+esc(a.cta)+'</span></div>';
+    } else {
+      inner = '<div class="photo" style="top:'+(story?'14%':'0')+';height:'+(story?'34%':'66%')+';align-items:center">'+bottle(a.tint,big?'74%':'72%')+'</div>'+
+        '<div class="copy" style="left:7%;right:7%;bottom:'+(story?'37%':'6%')+';border-radius:'+(big?8:6)+'px;padding:'+(big?'16px 18px':'10px 11px')+';gap:'+(big?6:4)+'px">'+
+        '<div class="h serif" style="font-size:'+fs+'px">'+h+'</div><div style="font-size:'+sfs+'px;color:#D8CFBF">'+esc(a.sub)+'</div>'+
+        '<span class="cta" style="font-size:'+cfs+'px;padding:'+cpad+';margin-top:'+(big?6:3)+'px">'+esc(a.cta)+'</span></div>';
+    }
+    inner += '<div class="brand" style="top:'+(story?'16%':(big?'6%':'7%'))+';font-size:'+bfs+'px">MAREN</div>';
+    if(!big) inner += '<span class="lock">'+ICON.lock(9)+'Original</span>';
+    if(story && S.showSafe) inner += '<div class="band top">Meta UI · keep clear</div><div class="band bottom">Meta UI · keep clear</div>';
+    var ratio = big?SIZES[size].ratio:'4 / 5';
+    var maxw = big?('max-width:'+SIZES[size].w+';'):'';
+    return '<div class="ad" style="aspect-ratio:'+ratio+';'+maxw+'background:'+a.bg+'">'+inner+'</div>';
+  }
+
+  function render(){
+    var sel = byId(S.selectedId), st = S.statuses[sel.id];
+    var counts = {all:ADS.length,pending:count('pending'),approved:count('approved'),rejected:count('rejected'),exported:count('exported')};
+    var shown = S.filter==='all'?ADS:ADS.filter(function(a){return S.statuses[a.id]===S.filter;});
+    var steps = [['Ingest','6 photos from Drive'],['Brief','Parsed to JSON'],['Copy','18 variants'],['Render','6 ads × 3 sizes'],['QA','2 warnings'],['Review',counts.pending+' pending'],['Export',counts.exported+' exported']];
+    var html = '';
+
+    html += '<header><div class="crumbs"><div class="logo"><span class="box">'+ICON.app+'</span>Ad Studio</div><span style="color:#9A9CA3">/</span><span style="color:var(--ink2)">Maren</span><span style="color:#9A9CA3">/</span><b>Winter Glow — 20% off</b></div>'+
+      '<div class="badges"><span class="badge demo">Demo · sample data</span><span class="badge sim">Drive (simulated)</span><span class="badge sim">Sheet (simulated)</span>'+
+      '<button class="primary" data-act="export"'+(counts.approved?'':' disabled')+'>'+ICON.down+'Export approved ('+counts.approved+')</button></div></header>';
+
+    if(S.toast) html += '<div class="toast" role="status"><span>'+esc(S.toast)+'</span><button data-act="toast" aria-label="Dismiss">×</button></div>';
+
+    html += '<div class="layout"><aside><nav class="panel" aria-label="Sections"><button>Campaigns</button><button aria-current="page">Review</button><button>Templates</button><button>Brand kit</button><button>Export log</button></nav>'+
+      '<section class="panel brief"><div class="row"><h2>Campaign brief</h2><span class="small" style="font-size:11px">parsed by agent</span></div>'+
+      '<div><div class="label">Offer</div><p>20% off all skincare, 12–30 Nov</p></div>'+
+      '<div><div class="label">Tone of voice</div><p>Calm, confident, warm. No exclamation marks, no hype words.</p></div>'+
+      '<div><div class="label">Copy rules</div><ul><li>Headline ≤ 32 characters</li><li>Never say “miracle” or “cure”</li><li>CTA from approved list</li></ul></div>'+
+      '<div><div class="label">Formats</div><div class="chips"><span>1080×1350</span><span>1080×1920</span><span>1080×1080</span></div></div>'+
+      '<div class="small" style="border-top:1px solid var(--line2);padding-top:12px">Photos: Drive › Maren › Winter Glow › raw (6 files)</div></section></aside><main>';
+
+    html += '<section class="panel steps" aria-label="Pipeline">';
+    steps.forEach(function(s,i){
+      var active = (i===5&&counts.pending>0)||(i===6&&counts.pending===0);
+      var done = i<5||(i===5&&counts.pending===0);
+      html += '<div class="step'+(active?' active':'')+'"><span class="dot'+(active?' active':(done?' done':''))+'">'+(i+1)+'</span><div><b>'+s[0]+'</b><small>'+s[1]+'</small></div></div>';
+    });
+    html += '</section><div class="work"><section class="gridwrap" aria-label="Generated ads"><div class="filters">';
+    [['all','All'],['pending','Pending'],['approved','Approved'],['rejected','Changes'],['exported','Exported']].forEach(function(f){
+      html += '<button data-act="filter" data-v="'+f[0]+'" aria-pressed="'+(S.filter===f[0])+'">'+f[1]+' · '+counts[f[0]]+'</button>';
+    });
+    html += '</div>';
+    if(shown.length){
+      html += '<div class="grid">';
+      shown.forEach(function(a){
+        var s = S.statuses[a.id];
+        html += '<button class="card'+(a.id===S.selectedId?' sel':'')+'" data-act="select" data-v="'+a.id+'" aria-label="'+esc(a.file)+', '+LABEL[s]+'">'+adMarkup(a,false)+
+          '<div style="display:flex;flex-direction:column;gap:6px"><div class="fname">'+esc(a.file)+'</div><div class="row"><span class="status s-'+s+'">'+LABEL[s]+'</span><span class="small" style="font-size:11px">'+a.template+'</span></div></div></button>';
+      });
+      html += '</div>';
+    } else html += '<div class="empty">No ads in this view.</div>';
+    html += '</section>';
+
+    // detail
+    var vi = S.variant[sel.id]||0;
+    html += '<section class="panel detail" aria-label="Selected ad"><div class="row" style="align-items:flex-start"><div style="min-width:0"><h2>'+esc(sel.file)+'</h2><div class="small" style="margin-top:2px">Template: '+sel.template+' · '+SIZES[S.size].label+'</div></div><span class="status s-'+st+'">'+LABEL[st]+'</span></div>';
+    html += '<div class="row" style="flex-wrap:wrap"><div class="seg" role="group" aria-label="Format">';
+    Object.keys(SIZES).forEach(function(k){html += '<button data-act="size" data-v="'+k+'" aria-pressed="'+(S.size===k)+'">'+k+'</button>';});
+    html += '</div>';
+    if(S.size==='9:16') html += '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);cursor:pointer"><input type="checkbox" data-act="safe"'+(S.showSafe?' checked':'')+'> Show Meta safe zones</label>';
+    html += '</div><div class="stage">'+adMarkup(sel,true,S.size)+'</div>';
+    html += '<div class="integrity">'+ICON.lock(14)+'<span>Product pixels unchanged · crop + scale only · source hash '+sel.hash+' matches</span></div>';
+    html += '<div class="variants"><h3>Headline variants <span style="font-weight:400;color:var(--muted)">(written by agent, tone-checked)</span></h3>';
+    sel.variants.forEach(function(t,i){html += '<button class="variant" data-act="variant" data-v="'+i+'" aria-pressed="'+(i===vi)+'"><span>'+esc(t)+'</span><small>'+t.length+'/32</small></button>';});
+    html += '</div><div class="qa"><h3>Automated QA</h3>';
+    sel.qa.forEach(function(q){html += '<div>'+(q.ok?ICON.check:ICON.warn)+'<span>'+esc(q.label)+'</span></div>';});
+    html += '</div>';
+    if(st==='rejected' && S.comments[sel.id]) html += '<div class="note">Reviewer note: '+esc(S.comments[sel.id])+'</div>';
+    if(st==='pending'||st==='rejected'){
+      html += '<div class="actions"><label for="note">Note for the agent (used if you request changes)</label><textarea id="note" data-act="comment" placeholder="e.g. Use a tighter crop, try a warmer headline">'+esc(S.comment)+'</textarea>'+
+        '<div class="btns"><button class="approve" data-act="approve">Approve</button><button class="reject" data-act="reject">Request changes</button></div></div>';
+    } else if(st==='approved'){
+      html += '<div class="actions" style="flex-direction:row;justify-content:space-between;align-items:center;color:var(--green);font-size:13px"><span>Approved — ready for export in all 3 sizes.</span><button class="ghost" data-act="undo">Undo</button></div>';
+    } else {
+      html += '<div class="actions" style="color:var(--navy);font-size:13px">Exported to Drive › Winter Glow › Approved, and logged in the Sheet.</div>';
+    }
+    html += '</section></div>';
+
+    // log
+    html += '<section class="panel log" aria-label="Export log"><div class="row" style="flex-wrap:wrap"><h2>Export log <span style="font-weight:400;color:var(--muted)">— in production this mirrors the Google Sheet</span></h2><span class="small">Folder: Drive › Maren › Winter Glow › Approved</span></div>';
+    html += '<div class="tablebox"><table><thead><tr><th>Time</th><th>Source photo</th><th>Headline</th><th>Template</th><th>Files</th><th>Approved by</th></tr></thead><tbody>';
+    S.log.forEach(function(r){html += '<tr><td>'+r.time+'</td><td>'+esc(r.file)+'</td><td>'+esc(r.headline)+'</td><td>'+r.template+'</td><td>1350 · 1920 · 1080</td><td>You</td></tr>';});
+    html += '</tbody></table></div>';
+    if(!S.log.length) html += '<div class="small" style="font-size:13px">Nothing exported yet. Approve ads, then use “Export approved”.</div>';
+    html += '</section>';
+
+    // templates
+    html += '<section class="panel templates" aria-label="Templates"><h2>Template: one layout, three exports</h2><p class="small" style="margin:0;font-size:13px">Dashed slots are filled by the agent. The photo slot only crops and scales the original file.</p><div class="tpls">';
+    html += tpl('4 / 5','<b>4:5 Feed</b> · 1080 × 1350',false)+tpl('9 / 16','<b>9:16 Stories / Reels</b> · 1080 × 1920',true)+tpl('1 / 1','<b>1:1 Feed</b> · 1080 × 1080',false);
+    html += '</div></section></main></div>';
+
+    document.getElementById('app').innerHTML = html;
+  }
+  function tpl(ratio,cap,story){
+    var s = '<figure><div class="ad" style="aspect-ratio:'+ratio+';background:#E9E1D4;box-shadow:0 8px 24px rgba(22,24,29,.10)">';
+    if(story) s += '<div class="band top">Safe zone · top 14%</div><div class="band bottom">Safe zone · bottom 35%</div>';
+    s += '<div class="brand" style="top:'+(story?'16%':'6%')+';font-size:11px;outline:1.5px dashed var(--blue);outline-offset:3px">MAREN</div>';
+    s += '<div class="slot" style="left:7%;right:7%;top:'+(story?'21%':'14%')+';height:'+(story?'24%':'46%')+'">'+ICON.lock(12)+'&nbsp;Photo slot · original pixels</div>';
+    s += '<div class="copy" style="left:7%;right:7%;'+(story?'top:47%':'bottom:6%')+';border-radius:6px;padding:10px 12px;gap:4px"><div class="h serif" style="font-size:18px">Headline ≤ 32 characters</div><span class="cta" style="font-size:9px;padding:3px 8px">CTA from list</span></div>';
+    return s+'</div><figcaption>'+cap+'</figcaption></figure>';
+  }
+
+  function nextPending(except){
+    for(var i=0;i<ADS.length;i++){var a=ADS[i];if(a.id!==except&&S.statuses[a.id]==='pending')return a.id;}
+    return except;
+  }
+  document.addEventListener('click',function(e){
+    var el = e.target.closest('[data-act]'); if(!el||el.dataset.act==='comment'||el.dataset.act==='safe') return;
+    var act = el.dataset.act, v = el.dataset.v, id = S.selectedId;
+    if(act==='filter') S.filter=v;
+    else if(act==='select'){S.selectedId=v;S.comment='';}
+    else if(act==='size') S.size=v;
+    else if(act==='variant') S.variant[id]=+v;
+    else if(act==='approve'){S.statuses[id]='approved';S.selectedId=nextPending(id);S.comment='';}
+    else if(act==='reject'){S.statuses[id]='rejected';S.comments[id]=S.comment||'Changes requested';S.selectedId=nextPending(id);S.comment='';}
+    else if(act==='undo') S.statuses[id]='pending';
+    else if(act==='toast') S.toast='';
+    else if(act==='export'){
+      var list = ADS.filter(function(a){return S.statuses[a.id]==='approved';}); if(!list.length) return;
+      var t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      var rows = list.map(function(a){S.statuses[a.id]='exported';return {time:t,file:a.file,template:a.template,headline:headline(a)};});
+      S.log = rows.concat(S.log);
+      var n = list.length;
+      S.toast = 'Exported '+n+' ad'+(n>1?'s':'')+' × 3 sizes ('+(n*3)+' files) to Drive and logged '+n+' row'+(n>1?'s':'')+' in the Sheet. (Simulated in this demo.)';
+    }
+    render();
+  });
+  document.addEventListener('input',function(e){if(e.target.dataset&&e.target.dataset.act==='comment') S.comment=e.target.value;});
+  document.addEventListener('change',function(e){if(e.target.dataset&&e.target.dataset.act==='safe'){S.showSafe=e.target.checked;render();}});
+  render();
+})();
+</script>
+</body>
+</html>
